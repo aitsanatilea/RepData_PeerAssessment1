@@ -69,12 +69,8 @@ median(activity_daily)
 
 
 ```r
-s1<-split(activity,activity$interval)
-activity_avg_int<-sapply(s1,function(x) mean(x[,"steps"], na.rm=TRUE))
-intervals<-unique(activity$interval)
-activity_ints<-data.frame("interval"=intervals, "avg_steps"=activity_avg_int, row.names = NULL)
-
-with(activity_ints, plot(x=interval, y=avg_steps, type="l", main="Average daily activity pattern",xlab="5-minute intervals", ylab="Average number of steps", xaxp = c(0, 2400, 24), col="darkblue"))
+activity_ints <- aggregate(steps ~ interval, activity, FUN=mean)
+with(activity_ints, plot(x=interval, y=steps, type="l", main="Average daily activity pattern",xlab="5-minute intervals", ylab="Average number of steps", xaxp = c(0, 2400, 24), col="darkblue"))
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
@@ -82,13 +78,13 @@ with(activity_ints, plot(x=interval, y=avg_steps, type="l", main="Average daily 
 Looking for 5-minute interval that contains the maximum number of steps on average across all the days in the dataset:
 
 ```r
-i<-activity_ints[activity_ints[,"avg_steps"]==max(activity_ints$avg_steps),]
+i<-activity_ints[activity_ints[,"steps"]==max(activity_ints$steps),]
 i
 ```
 
 ```
-##     interval avg_steps
-## 104      835  206.1698
+##     interval    steps
+## 104      835 206.1698
 ```
 The interval is 835 with the average number of steps 206.2.
   
@@ -97,8 +93,7 @@ The interval is 835 with the average number of steps 206.2.
 1. The total number of missing values in the dataset (i.e. the total number of rows with NAs):
 
 ```r
-bad<-!complete.cases(activity)
-nrow(activity[bad,])
+nrow(activity[!complete.cases(activity),])
 ```
 
 ```
@@ -197,20 +192,13 @@ head(activity_complete)
 
 
 ```r
-s3<-split(activity_complete,activity_complete$interval)
-avg_int_wd<-sapply(s3,function(x) mean(x[x[,"weekday"]=="weekday","steps"], na.rm=TRUE))
-avg_int_we<-sapply(s3,function(x) mean(x[x[,"weekday"]=="weekend","steps"], na.rm=TRUE))
-intervals<-unique(activity$interval)
-activity_int_wd<-data.frame("interval"=intervals, "avg_steps"=avg_int_wd, "weekday"="weekday", row.names = NULL)
-activity_int_we<-data.frame("interval"=intervals, "avg_steps"=avg_int_we, "weekday"="weekend", row.names = NULL)
-activity_int<-rbind(activity_int_wd,activity_int_we)
-activity_int<-transform(activity_int,weekday=factor(weekday))
+activity_int <- aggregate(steps ~ interval + weekday, data=activity_complete, FUN=mean)
 ```
 
 
 ```r
 library(lattice)
-xyplot(avg_steps~interval|weekday, data = activity_int, layout=c(1,2), type="l", xlab="Interval", ylab="Number of steps")
+xyplot(steps~interval|weekday, data = activity_int, layout=c(1,2), type="l", xlab="Interval", ylab="Number of steps")
 ```
 
 ![](PA1_template_files/figure-html/unnamed-chunk-16-1.png)<!-- -->

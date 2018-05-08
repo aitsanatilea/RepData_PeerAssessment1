@@ -43,27 +43,22 @@ median(activity_daily)
 ## What is the average daily activity pattern?
 
 ```{r, echo=TRUE, cache=TRUE}
-s1<-split(activity,activity$interval)
-activity_avg_int<-sapply(s1,function(x) mean(x[,"steps"], na.rm=TRUE))
-intervals<-unique(activity$interval)
-activity_ints<-data.frame("interval"=intervals, "avg_steps"=activity_avg_int, row.names = NULL)
-
-with(activity_ints, plot(x=interval, y=avg_steps, type="l", main="Average daily activity pattern",xlab="5-minute intervals", ylab="Average number of steps", xaxp = c(0, 2400, 24), col="darkblue"))
+activity_ints <- aggregate(steps ~ interval, activity, FUN=mean)
+with(activity_ints, plot(x=interval, y=steps, type="l", main="Average daily activity pattern",xlab="5-minute intervals", ylab="Average number of steps", xaxp = c(0, 2400, 24), col="darkblue"))
 ```
 
 Looking for 5-minute interval that contains the maximum number of steps on average across all the days in the dataset:
 ```{r, echo=TRUE}
-i<-activity_ints[activity_ints[,"avg_steps"]==max(activity_ints$avg_steps),]
+i<-activity_ints[activity_ints[,"steps"]==max(activity_ints$steps),]
 i
 ```
-The interval is `r i$interval` with the average number of steps `r round(i$avg_steps,1)`.
+The interval is `r i$interval` with the average number of steps `r round(i$steps,1)`.
   
     
 ## Imputing missing values
 1. The total number of missing values in the dataset (i.e. the total number of rows with NAs):
 ```{r, echo=TRUE, cache=TRUE}
-bad<-!complete.cases(activity)
-nrow(activity[bad,])
+nrow(activity[!complete.cases(activity),])
 ```
 2. Strategy for filling in missing values: for every row where the number of steps is NA, the assigned value is the mean number of steps for that particular 5-minute interval rounded to the nearest integer.
 ```{r, echo=TRUE, cache=TRUE}
@@ -118,19 +113,12 @@ head(activity_complete)
 2. Panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).  
 
 ```{r, echo=TRUE, cache=TRUE}
-s3<-split(activity_complete,activity_complete$interval)
-avg_int_wd<-sapply(s3,function(x) mean(x[x[,"weekday"]=="weekday","steps"], na.rm=TRUE))
-avg_int_we<-sapply(s3,function(x) mean(x[x[,"weekday"]=="weekend","steps"], na.rm=TRUE))
-intervals<-unique(activity$interval)
-activity_int_wd<-data.frame("interval"=intervals, "avg_steps"=avg_int_wd, "weekday"="weekday", row.names = NULL)
-activity_int_we<-data.frame("interval"=intervals, "avg_steps"=avg_int_we, "weekday"="weekend", row.names = NULL)
-activity_int<-rbind(activity_int_wd,activity_int_we)
-activity_int<-transform(activity_int,weekday=factor(weekday))
+activity_int <- aggregate(steps ~ interval + weekday, data=activity_complete, FUN=mean)
 ```
 
 ```{r, echo=TRUE}
 library(lattice)
-xyplot(avg_steps~interval|weekday, data = activity_int, layout=c(1,2), type="l", xlab="Interval", ylab="Number of steps")
+xyplot(steps~interval|weekday, data = activity_int, layout=c(1,2), type="l", xlab="Interval", ylab="Number of steps")
 ```
 
 
